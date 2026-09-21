@@ -28,6 +28,14 @@ jobs:
           mkdir -p /tmp/beta
           unzip -q BetaV5_Phone_Build.zip -d /tmp/beta
 
+      - name: Fix Java and Kotlin JVM targets
+        run: |
+          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -exec sed -i \
+            -e 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' \
+            -e 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' \
+            -e 's/jvmTarget[[:space:]]*=[[:space:]]*["'\'']1\.8["'\'']/jvmTarget = "17"/g' \
+            {} \;
+
       - name: Build debug APK
         working-directory: /tmp/beta/BetaV5_Android_Connected/android
         run: gradle assembleDebug --no-daemon
