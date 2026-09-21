@@ -28,13 +28,21 @@ jobs:
           mkdir -p /tmp/beta
           unzip -q BetaV5_Phone_Build.zip -d /tmp/beta
 
-      - name: Create JVM compatibility fix
+      - name: Configure Kotlin JVM target
         run: |
-          cat > /tmp/fix-jvm.gradle <<'EOF'
-          allprojects {
-            afterEvaluate {
-              tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
-                sourceCompatibility = "17"
+          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -print
+          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -exec sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' {} \;
+          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -exec sed -i 's/jvmTarget *= *["'\'']1.8["'\'']/jvmTarget = "17"/g' {} \;
+
+      - name: Build debug APK
+        working-directory: /tmp/beta/BetaV5_Android_Connected/android
+        run: gradle assembleDebug --no-daemon -Pkotlin.jvm.target.validation.mode=ignore
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Beta-debug-apk
+          path: /tmp/beta/BetaV5_Android_Connected/android/app/build/outputs/apk/debug/app-debug.apk                sourceCompatibility = "17"
                 targetCompatibility = "17"
                 options.release.set(17)
               }
