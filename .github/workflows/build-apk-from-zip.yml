@@ -1,4 +1,4 @@
-name: .github/workflows/build-apk-from-zip.yml
+name: name: Build Beta APK
 
 on:
   workflow_dispatch:
