@@ -28,13 +28,19 @@ jobs:
           mkdir -p /tmp/beta
           unzip -q BetaV5_Phone_Build.zip -d /tmp/beta
 
-      - name: Configure Kotlin JVM target
+      - name: Fix Java target
         run: |
-          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -print
-          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -exec sed -i 's/JavaVersion.VERSION_1_8/JavaVersion.VERSION_17/g' {} \;
-          find /tmp/beta/BetaV5_Android_Connected/android -name "*.gradle" -type f -exec sed -i 's/jvmTarget *= *["'\'']1.8["'\'']/jvmTarget = "17"/g' {} \;
+          python3 -c "from pathlib import Path; root=Path('/tmp/beta/BetaV5_Android_Connected/android'); [p.write_text(p.read_text().replace('JavaVersion.VERSION_1_8','JavaVersion.VERSION_17').replace('sourceCompatibility = \"1.8\"','sourceCompatibility = \"17\"').replace('targetCompatibility = \"1.8\"','targetCompatibility = \"17\"')) for p in root.rglob('*.gradle')]"
 
       - name: Build debug APK
+        working-directory: /tmp/beta/BetaV5_Android_Connected/android
+        run: gradle assembleDebug --no-daemon -Pkotlin.jvm.target.validation.mode=ignore
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Beta-debug-apk
+          path: /tmp/beta/BetaV5_Android_Connected/android/app/build/outputs/apk/debug/app-debug.apk      - name: Build debug APK
         working-directory: /tmp/beta/BetaV5_Android_Connected/android
         run: gradle assembleDebug --no-daemon -Pkotlin.jvm.target.validation.mode=ignore
 
